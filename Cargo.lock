@@ -174,7 +174,7 @@ dependencies = [
 [[package]]
 name = "cyclic_list"
 version = "0.1.0"
-source = "git+https://github.com/HasinZaman/cyclic_list.git#7e1bbae1593ca4ac60c700196c6e685d71acafd2"
+source = "git+https://github.com/HasinZaman/cyclic_list.git#11507392d67f67ff04a4f932acbed7eb015effd5"
 
 [[package]]
 name = "derivative"

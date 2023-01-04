@@ -1,4 +1,6 @@
-use std::{array, fmt::{Debug, Display}, cmp::{min, max}, borrow::BorrowMut};
+use std::{array, fmt::{Debug, Display}, cmp::{min, max}, borrow::BorrowMut, mem};
+
+use cyclic_list::{CyclicList, List};
 
 use self::{row::Row, cell::Cell, cursor::Cursor};
 
@@ -21,16 +23,18 @@ pub struct Game<const WIDTH: usize, const HEIGHT: usize> {
     pub board: Board<WIDTH, HEIGHT>,
     pub new_row: fn(&mut Row<WIDTH>),
     cursor: Cursor,
+    copy_buffer: CyclicList<WIDTH, Option<Cell>, false>,
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
     pub fn new(new_row: fn(&mut Row<WIDTH>), cursor: Cursor) -> Self {
         let board: [Row<WIDTH>; HEIGHT] = array::from_fn(|_| Row::default());
-        
+
         Game{
             board: board,
             new_row,
-            cursor
+            cursor,
+            copy_buffer: CyclicList::default()
         }
     }
 
@@ -152,17 +156,63 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
 
         self.cursor = new_cursor;
     }
+
+    pub fn cut_at_cursor(&mut self) {
+        let start = min(self.copy_buffer.len(), self.cursor.length);
+        let mut pos_iter = self.cursor.pos_iter();
+
+        for (i, (x,y)) in (0..start).zip(&mut pos_iter) {
+            if let Some(Cell::Empty) = self.copy_buffer.get_mut(i).unwrap() {
+                mem::replace(
+                    self.copy_buffer.get_mut(i).unwrap(),
+                    Some(self.board[y as usize][x as usize])
+                );
+            }
+        }
+
+        for (x,y) in pos_iter {
+            self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
+            self.board[y as usize][x as usize] = Cell::Empty;
+        }
+    }
+
+    pub fn paste_at_cursor(&mut self) {
+        if self.copy_buffer.len() <= 0 {
+            return ;
+        }
+
+        for (x, y)in self.cursor.pos_iter() {
+            println!("{:?}", (x, y));
+
+            let buffer_val = match self.copy_buffer.remove_front() {
+                Some(val) => {
+                    *val
+                },
+                None => None
+            };
+
+
+            match (buffer_val, self.board[y as usize][x as usize]) {
+                (Some(cell), Cell::Empty) => {
+                    self.board[y as usize][x as usize] = cell;
+                },
+                (Some(cell), _) => {
+                    self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
+                    self.board[y as usize][x as usize] = cell;
+                },
+                (Some(Cell::Empty), _) | _ => {
+
+                }
+            };
+        }
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Default for Game<WIDTH, HEIGHT> {
     fn default() -> Self {
-        let board: [Row<WIDTH>; HEIGHT] = array::from_fn(|_| Row::default());
-        
-        Game{
-            board: board,
-            new_row: Row::random,
-            cursor: Cursor::default(),
-        }
+        let game: Game<WIDTH, HEIGHT> = Self::new(Row::empty, Cursor::default());
+
+        game
     }
 }
 
@@ -213,7 +263,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Debug for Game<WIDTH, HEIGHT> {
                 format!("DEBUG{}GAME", " ".repeat(WIDTH-"DEBUG".len()+4)),
                 |acc, row| format!("{}\n{}", acc, row.1)
             );
-        write!(f, "{}\nCursor:{:?}", board, self.cursor)
+        write!(f, "{}\nCursor:{:?}\nBuffer:{:?}", board, self.cursor, self.copy_buffer)
     }
 }
 

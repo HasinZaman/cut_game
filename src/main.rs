@@ -74,10 +74,12 @@ fn main() {
 
                             //cut and paste
                             'x' => {
-
+                                println!("cut");
+                                game.cut_at_cursor();
                             },
                             'v' => {
-
+                                println!("paste");
+                                game.paste_at_cursor();
                             },
 
                             _ => {
@@ -92,7 +94,7 @@ fn main() {
         println!("{:?}", game);
         game.next();
 
-        thread::sleep(Duration::from_millis(250));
+        thread::sleep(Duration::from_millis(1000));
     }
     
 

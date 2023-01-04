@@ -1,11 +1,39 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::{RangeInclusive, Range}};
 
 pub type Coord = (i8, i8);
 
 /// 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg
 type Rot = u8; 
 
-///
+#[derive(Debug)]
+pub struct CursorPosIter<'a> {
+    pos: RangeInclusive<usize>,
+    cursor: &'a Cursor,
+}
+
+impl<'a> CursorPosIter<'a>{
+    pub fn new(cursor: &'a Cursor) -> Self {
+        Self{
+            pos: (1..=cursor.length),
+            cursor,
+        }
+    }
+}
+
+impl<'a> Iterator for CursorPosIter<'a> {
+    type Item = Coord;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut tmp = *self.cursor;
+
+        tmp.length = self.pos.next()?;
+
+        let coord = tmp.end();
+
+        return Some(coord);
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct Cursor {
     pub pivot: Coord,
@@ -48,6 +76,9 @@ impl Cursor {
                 self.length = length;
             }
         }
+    }
+    pub fn pos_iter(&self) -> CursorPosIter{
+        CursorPosIter::new(self)
     }
 }
 
