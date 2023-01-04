@@ -1,12 +1,13 @@
-use std::{array, fmt::{Debug, Display}, cmp::{min, max}, borrow::BorrowMut, mem};
+use std::{array, fmt::{Debug, Display}, cmp::{min, max}, mem};
 
 use cyclic_list::{CyclicList, List};
 
-use self::{row::Row, cell::Cell, cursor::Cursor};
+use self::{row::Row, cell::Cell, cursor::Cursor, score::Score};
 
 pub mod cell;
 pub mod row;
 mod cursor;
+mod score;
 
 pub type Board<const WIDTH: usize, const HEIGHT: usize> = [Row<WIDTH>; HEIGHT];
 
@@ -24,6 +25,8 @@ pub struct Game<const WIDTH: usize, const HEIGHT: usize> {
     pub new_row: fn(&mut Row<WIDTH>),
     cursor: Cursor,
     copy_buffer: CyclicList<WIDTH, Option<Cell>, false>,
+    completed_line: (u64, u64),
+    pub fail_ticks: u64,
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
@@ -34,7 +37,9 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             board: board,
             new_row,
             cursor,
-            copy_buffer: CyclicList::default()
+            copy_buffer: CyclicList::default(),
+            completed_line: (0, 0),
+            fail_ticks: 0,
         }
     }
 
@@ -44,10 +49,12 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             start = (1..HEIGHT).
                 find(
                     |y| {
-                        if let (cell::Cell::Filled(_), cell::Cell::Empty) = (&self.board[*y - 1][x], &self.board[*y][x]) {
-                            return true;
+                        match (&self.board[*y - 1][x], &self.board[*y][x]) {
+                            (cell::Cell::Empty, cell::Cell::Filled(_)) |
+                            (cell::Cell::Filled(_), cell::Cell::Empty) => true,
+
+                            _=> false
                         }
-                        return false;
                     }
                 )
                 .unwrap_or(HEIGHT);
@@ -73,6 +80,9 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
 
         if start != HEIGHT {
             (self.new_row)(&mut self.board[HEIGHT-1]);
+        }
+        else {
+            self.fail_ticks += 1;
         }
     }
 
@@ -206,11 +216,51 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             };
         }
     }
+
+    pub fn calc_point(&mut self)  {
+        let mut empty_col = Vec::new();
+        let mut empty_row = Vec::new();
+        for x in 0..WIDTH{
+            let first = self.board[0][x];
+
+            let add_row = (1..HEIGHT)
+                .map(|y| self.board[y][x])
+                .all(|cell| first == cell);
+        
+            if add_row {
+                self.completed_line.0 += 1;
+                empty_col.push(x);
+            }
+        }
+
+        for y in 0..HEIGHT {
+            let first = self.board[y][0];
+
+            let add_row = (1..WIDTH)
+                .map(|x| self.board[y][x])
+                .all(|cell| first == cell);
+        
+            if add_row {
+                self.completed_line.1 += 1;
+                empty_row.push(y);
+            }
+        }
+
+        for row in empty_row {
+            Row::empty(&mut self.board[row]);
+        }
+
+        for col in empty_col {
+            for y in 0..HEIGHT {
+                self.board[y][col] = Cell::Empty;
+            }
+        }
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Default for Game<WIDTH, HEIGHT> {
     fn default() -> Self {
-        let game: Game<WIDTH, HEIGHT> = Self::new(Row::empty, Cursor::default());
+        let game: Game<WIDTH, HEIGHT> = Self::new(Row::random, Cursor::default());
 
         game
     }
@@ -263,7 +313,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Debug for Game<WIDTH, HEIGHT> {
                 format!("DEBUG{}GAME", " ".repeat(WIDTH-"DEBUG".len()+4)),
                 |acc, row| format!("{}\n{}", acc, row.1)
             );
-        write!(f, "{}\nCursor:{:?}\nBuffer:{:?}", board, self.cursor, self.copy_buffer)
+        write!(f, "{}\nCursor:{:?}\nBuffer:{:?}\nCompleted Lines:{:?}", board, self.cursor, self.copy_buffer, self.completed_line)
     }
 }
 
@@ -285,6 +335,8 @@ impl<const WIDTH: usize, const HEIGHT: usize> Iterator for Game<WIDTH, HEIGHT> {
 
     fn next(&mut self) -> Option<Self::Item> {
 
+        self.calc_point();
+        
         self.fall();
 
         Some(self.board)

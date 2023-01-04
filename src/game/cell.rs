@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CellValue {
     Zero = 0,
     One = 1,
@@ -56,6 +56,16 @@ impl Display for Cell {
             }
         )
         
+    }
+}
+
+impl PartialEq for Cell {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Empty, Self::Empty) => false,
+            (Self::Filled(l0), Self::Filled(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
     }
 }
 
