@@ -1,12 +1,15 @@
-use std::cmp::{max, min};
+use std::fmt::Debug;
 
 pub type Coord = (i8, i8);
-type Rot = u8; // 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg
 
+/// 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg
+type Rot = u8; 
+
+///
 #[derive(Clone, Copy)]
 pub struct Cursor {
     pub pivot: Coord,
-    pub length: i8,
+    pub length: usize,
     rotation: Rot,
 }
 
@@ -21,8 +24,8 @@ impl Cursor {
         }
     }
     pub fn end(&self) -> Coord{
-        let mut end = self.pivot;
-        end.0 += self.length as i8;
+        let mut end = (0,0);
+        end.0 += self.length as i8 - 1;
 
         let cos = cos(self.rotation);
         let sin = sin(self.rotation);
@@ -55,6 +58,17 @@ impl Default for Cursor{
             length: 1,
             rotation: 0,
         }
+    }
+}
+
+impl Debug for Cursor{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Cursor")
+            .field("pivot", &self.pivot)
+            .field("end", &self.end())
+            .field("length", &self.length)
+            .field("rotation", &self.rotation)
+            .finish()
     }
 }
 
