@@ -3,10 +3,10 @@ use std::{time::Duration, thread};
 use game::row::Row;
 
 mod game;
+mod logger;
 fn main() {
-    //let mut game = game::Game::<20,32>::default();
 
-    let mut game = game::Game::<4,8>::default();
+    log_initialize();    
 
 
     // for i in 30..32{

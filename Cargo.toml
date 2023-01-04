@@ -7,7 +7,11 @@ edition = "2021"
 
 [dependencies]
 tui = "*"
+crossterm = "*"
 
 rand = "*"
 
-log4r = "*"
+log = "*"
+log4rs = "*"
+
+cyclic_list = { git = "https://github.com/HasinZaman/cyclic_list.git" }
