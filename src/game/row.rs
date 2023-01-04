@@ -30,7 +30,9 @@ impl<const WIDTH: usize> Debug for Row<WIDTH> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let debug = (*self).iter()
             .fold(String::from(""), |acc, cell| format!("{}{:?}", acc, cell));
-        write!(f, "{}\t{:}", self.to_string(), debug)
+
+        let game_view = self.to_string();
+        write!(f, "{debug}\t{game_view}")
     }
 }
 
