@@ -27,7 +27,7 @@ impl Distribution<CellValue> for Standard {
 #[derive(Clone, Copy)]
 pub enum Cell {
     Empty,
-    Filled(CellValue)
+    Filled(CellValue),
 }
 
 impl Debug for Cell {
