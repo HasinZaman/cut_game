@@ -1,101 +1,107 @@
-
-use io::input_handler;
 use logger::log_initialize;
-use terminal::terminal_initialize;
 
-use std::{time::Duration, thread::{self}};
+use model::{game, ui::menu::{Menu, MainMenuOption}};
+use presenter::Presenter;
 
-use game::row::Row;
+use crate::presenter::menu::MainMenu;
 
-use cyclic_list::{list::List};
+use view::{terminal::{TerminalView}, View};
 
-use crate::game::{CursorPosChangeDir, CursorRotChangeDir};
-
-mod game;
-mod io;
 mod logger;
-mod terminal;
-pub mod utils;
+
+mod model;
+mod presenter;
+mod view;
 
 fn main() {
 
     log_initialize();    
 
-    let _terminal = terminal_initialize();
 
+    let mut model = Menu::<MainMenuOption>::new(String::from("Game Title"), MainMenuOption::default());
+    let mut presenter = MainMenu::new();
+    let mut terminal = TerminalView::<16>::new(Box::new(|_| {}));
 
-    let mut game = game::Game::<6,10>::default();
-
-
-    Row::random(&mut game.board[0]);
-
-    let (_t, io_stream) = input_handler();
-    
+    presenter.update_model(&mut model, &mut terminal);
+    presenter.update_view(&mut model, &mut terminal);
+    terminal.render();
     loop {
-        {
-            let mut io_stream = io_stream.lock().unwrap();
-            let io_stream = &mut *io_stream;
-
-            while io_stream.len() > 0 {
-                let event = io_stream.remove_front().unwrap();
-
-                match event {
-                    io::GameEvent::Key(char) => {
-                        match char {
-                            //move cursor
-                            'w' => {
-                                game.move_cursor(0, 1);
-                            },
-                            'a' => {
-                                game.move_cursor(-1, 0);
-                            },
-                            's' => {
-                                game.move_cursor(0, -1);
-                            },
-                            'd' => {
-                                game.move_cursor(1, 0);
-                            },
-
-                            //rotate
-                            'q' => {
-                                game.change_cursor_rot(CursorRotChangeDir::Clockwise);
-                            },
-                            'e' => {
-                                game.change_cursor_rot(CursorRotChangeDir::CounterClockwise);
-                            },
-
-                            //rotate
-                            'Q' => {
-                                game.change_cursor_length(CursorPosChangeDir::Shrink);
-                            },
-                            'E' => {
-                                game.change_cursor_length(CursorPosChangeDir::Grow);
-                            },
-
-                            //cut and paste
-                            'x' => {
-                                println!("cut");
-                                game.cut_at_cursor();
-                            },
-                            'v' => {
-                                println!("paste");
-                                game.paste_at_cursor();
-                            },
-
-                            _ => {
-
-                            }
-                        }
-                    },
-                }
-            }
-        }
-        
-        println!("{:?}", game);
-        game.next();
-
-        thread::sleep(Duration::from_millis(1000));
+        presenter.update_model(&mut model, &mut terminal);
+        presenter.update_view(&mut model, &mut terminal);
+        terminal.render();
     }
+
+    // let mut game = game::Game::<5,5>::default();
+
+
+    // Row::random(&mut game.board[0]);
+
+    // let (_t, io_stream) = input_handler();
+    
+    // loop {
+    //     {
+    //         let mut io_stream = io_stream.lock().unwrap();
+    //         let io_stream = &mut *io_stream;
+
+    //         while io_stream.len() > 0 {
+    //             let event = io_stream.remove_front().unwrap();
+
+    //             match event {
+    //                 io::GameEvent::Key(char) => {
+    //                     match char {
+    //                         //move cursor
+    //                         'w' => {
+    //                             game.move_cursor(0, 1);
+    //                         },
+    //                         'a' => {
+    //                             game.move_cursor(-1, 0);
+    //                         },
+    //                         's' => {
+    //                             game.move_cursor(0, -1);
+    //                         },
+    //                         'd' => {
+    //                             game.move_cursor(1, 0);
+    //                         },
+
+    //                         //rotate
+    //                         'q' => {
+    //                             game.change_cursor_rot(CursorRotChangeDir::Clockwise);
+    //                         },
+    //                         'e' => {
+    //                             game.change_cursor_rot(CursorRotChangeDir::CounterClockwise);
+    //                         },
+
+    //                         //rotate
+    //                         'Q' => {
+    //                             game.change_cursor_length(CursorPosChangeDir::Shrink);
+    //                         },
+    //                         'E' => {
+    //                             game.change_cursor_length(CursorPosChangeDir::Grow);
+    //                         },
+
+    //                         //cut and paste
+    //                         'x' => {
+    //                             game.cut_at_cursor();
+    //                         },
+    //                         'v' => {
+    //                             game.paste_at_cursor();
+    //                         },
+
+    //                         _ => {
+
+    //                         }
+    //                     }
+    //                 },
+    //             }
+    //         }
+    //     }
+        
+    //     println!("{:?}", game);
+    //     game.calc_point();
+    //     game.next();
+
+    //     thread::sleep(Duration::from_millis(1000));
+    // }
     
 
 }

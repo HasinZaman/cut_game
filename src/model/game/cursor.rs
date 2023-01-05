@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::{RangeInclusive, Range}};
+use std::{fmt::Debug, ops::{RangeInclusive}};
 
 pub type Coord = (i8, i8);
 
