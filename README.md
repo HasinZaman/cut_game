@@ -1,9 +1,6 @@
-  ____             __           ____        ____                  __             
-/\  _`\          /\ \__      /|  _ \      /\  _`\               /\ \__          
-\ \ \/\_\  __  __\ \ ,_\     |/\   |      \ \ \L\ \ __      ____\ \ ,_\    __   
- \ \ \/_/_/\ \/\ \\ \ \/      \// __`\/\   \ \ ,__/'__`\   /',__\\ \ \/  /'__`\ 
-  \ \ \L\ \ \ \_\ \\ \ \_     /|  \L>  <_   \ \ \/\ \L\.\_/\__, `\\ \ \_/\  __/ 
-   \ \____/\ \____/ \ \__\    | \_____/\/    \ \_\ \__/.\_\/\____/ \ \__\ \____\
-    \/___/  \/___/   \/__/     \/____/\/      \/_/\/__/\/_/\/___/   \/__/\/____/
-                                                                                
-                                                                                
+# Cut and Paste
+
+Cut & Paste is terminal game developed for the [uOttawa Game Dev Club Holiday Jam 2022](https://itch.io/jam/uottawa-game-dev-club-holiday-jam-2022).
+
+## Note:
+This branch stores the version of the game submitted to the game jam. The [Main branch](https://github.com/HasinZaman/cut_game/tree/master) has the most recent version and more info on the project.
