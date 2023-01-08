@@ -9,7 +9,7 @@ use log4rs::{
 
 pub fn log_initialize() {
     let log_file = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {t} - {m}{n}\n")))
         .build(".log")
         .unwrap();
     

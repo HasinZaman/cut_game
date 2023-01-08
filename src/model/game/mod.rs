@@ -1,9 +1,12 @@
-use std::{array, fmt::{Debug, Display}, cmp::{min, max}, mem};
+use std::{array, fmt::{Debug, Display}, cmp::{min, max}};
+
 
 use cyclic_list::{CyclicList, List};
+use log::trace;
 
-use self::{row::Row, cell::Cell, cursor::Cursor, score::Score};
+use self::{row::Row, cell::Cell, cursor::{Cursor, Coord}};
 
+pub mod game_model;
 pub mod cell;
 pub mod row;
 mod cursor;
@@ -11,15 +14,40 @@ mod score;
 
 pub type Board<const WIDTH: usize, const HEIGHT: usize> = [Row<WIDTH>; HEIGHT];
 
-pub enum CursorPosChangeDir{
+#[derive(Debug, Clone, Copy)]
+pub enum CursorCommand {
+    Move(CursorMove),
+    Len(CursorLen),
+    Rotate(CursorRot),
+    Cut,
+    Paste,
+    Nothing
+}
+
+impl Default for CursorCommand {
+    fn default() -> Self {
+        CursorCommand::Nothing
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CursorMove{
+    X(i8),
+    Y(i8)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CursorLen{
     Grow,
     Shrink
 }
-pub enum CursorRotChangeDir{
+
+#[derive(Debug, Clone, Copy)]
+pub enum CursorRot{
     Clockwise,
     CounterClockwise
 }
-
+#[derive(Clone)]
 pub struct Game<const WIDTH: usize, const HEIGHT: usize> {
     pub board: Board<WIDTH, HEIGHT>,
     pub new_row: fn(&mut Row<WIDTH>),
@@ -78,7 +106,17 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             }
         }
 
-        if start != HEIGHT {
+        let cond = self.board
+            .last()
+            .unwrap()
+            .iter()
+            .all(|cell| {
+                if let Cell::Empty = cell {
+                    return true;
+                }
+                return false;
+            });
+        if cond {
             (self.new_row)(&mut self.board[HEIGHT-1]);
         }
         else {
@@ -86,9 +124,13 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
         }
     }
 
-    pub fn change_cursor_length(&mut self, dir: CursorPosChangeDir) {
+    pub fn cursor_range(&self) -> (Coord, Coord) {
+        (self.cursor.pivot, self.cursor.end())
+    }
+
+    pub fn change_cursor_length(&mut self, dir: CursorLen) {
         match dir{
-            CursorPosChangeDir::Grow => {
+            CursorLen::Grow => {
                 let mut new_cursor = self.cursor;
                 new_cursor.double();
 
@@ -100,7 +142,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
 
                 self.cursor = new_cursor;
             },
-            CursorPosChangeDir::Shrink => {
+            CursorLen::Shrink => {
                 self.cursor.shrink();
             },
         }
@@ -125,23 +167,21 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
     }
 
     fn fix_cursor_x_axis(cursor: &mut Cursor) {
-        let mut end = cursor.end();
+        let end = cursor.end();
 
         let min = min(cursor.pivot.0, end.0);
         let max = max(cursor.pivot.0, end.0);
 
         if min < 0 {
             cursor.pivot.0 += 0 - min;
-            end = cursor.end();
         }
         else if WIDTH <= max as usize {
             cursor.pivot.0 += (WIDTH - 1) as i8 - max;
-            end = cursor.end();
         }
     }
 
     fn fix_cursor_y_axis(cursor: &mut Cursor) {
-        let mut end = cursor.end();
+        let end = cursor.end();
         
         let min = min(cursor.pivot.1, end.1);
         let max = max(cursor.pivot.1, end.1);
@@ -154,12 +194,12 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
         }
     }
 
-    pub fn change_cursor_rot(&mut self, rot: CursorRotChangeDir){
+    pub fn change_cursor_rot(&mut self, rot: CursorRot){
         let mut new_cursor = self.cursor;
 
         match rot {
-            CursorRotChangeDir::Clockwise => new_cursor.clockwise_rot(),
-            CursorRotChangeDir::CounterClockwise => new_cursor.counter_clockwise_rot(),
+            CursorRot::Clockwise => new_cursor.clockwise_rot(),
+            CursorRot::CounterClockwise => new_cursor.counter_clockwise_rot(),
         }
 
         Self::fix_cursor_pos(&mut new_cursor);
@@ -173,15 +213,12 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
 
         for (i, (x,y)) in (0..start).zip(&mut pos_iter) {
             if let Some(Cell::Empty) = self.copy_buffer.get_mut(i).unwrap() {
-                mem::replace(
-                    self.copy_buffer.get_mut(i).unwrap(),
-                    Some(self.board[y as usize][x as usize])
-                );
+                *self.copy_buffer.get_mut(i).unwrap() = Some(self.board[y as usize][x as usize]);
             }
         }
 
         for (x,y) in pos_iter {
-            self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
+            let _ = self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
             self.board[y as usize][x as usize] = Cell::Empty;
         }
     }
@@ -207,10 +244,10 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
                     self.board[y as usize][x as usize] = cell;
                 },
                 (Some(cell), _) => {
-                    self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
+                    let _ = self.copy_buffer.push(Some(self.board[y as usize][x as usize].clone()));
                     self.board[y as usize][x as usize] = cell;
                 },
-                (Some(Cell::Empty), _) | _ => {
+                /*(Some(Cell::Empty), _) | */_ => {
 
                 }
             };
@@ -256,6 +293,10 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             }
         }
     }
+
+    pub fn completed_lines(&self) -> (u64, u64) {
+        self.completed_line
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize> Default for Game<WIDTH, HEIGHT> {
@@ -293,11 +334,11 @@ impl<const WIDTH: usize, const HEIGHT: usize> Debug for Game<WIDTH, HEIGHT> {
                         let mut tmp = String::from("");
                     
                         let mut chars = row.chars();
-                        for i in 0..(cursor_range.0.0 as usize) {
+                        for _i in 0..(cursor_range.0.0 as usize) {
                             tmp.push(chars.next().unwrap());
                         }
 
-                        for x in (cursor_range.0.0 as usize)..=(cursor_range.1.0 as usize) {
+                        for _x in (cursor_range.0.0 as usize)..=(cursor_range.1.0 as usize) {
                             tmp.push('X');
                             chars.next();
                         }

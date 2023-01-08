@@ -1,10 +1,13 @@
 use std::fmt::Debug;
 
+use super::Game;
+
+#[derive(Clone, Copy)]
 pub struct Score {
     cols: u64,
-    col_modifier: u64,
+    pub col_modifier: u64,
     rows: u64,
-    row_modifier: u64,
+    pub row_modifier: u64,
 }
 
 impl Score{
@@ -21,12 +24,13 @@ impl Score{
         self.cols * self.col_modifier + self.rows * self.row_modifier
     }
 
-    pub fn add_row(&mut self) {
-        self.rows+=1;
-    }
+}
 
-    pub fn add_column(&mut self) {
-        self.cols+=1;
+impl<const W: usize, const H: usize> From<Game<W, H>> for Score {
+    fn from(value: Game<W, H>) -> Self {
+        let (cols, rows) = value.completed_lines();
+
+        Self { cols: cols, col_modifier: 1, rows: rows, row_modifier: 1 }
     }
 }
 

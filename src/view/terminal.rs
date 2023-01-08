@@ -1,5 +1,5 @@
 
-use std::{io::{self, Stdout}, thread::{self, JoinHandle, Thread}, time::Duration, sync::{Mutex, Arc}};
+use std::{io::{self, Stdout}, thread::{self, JoinHandle}, time::Duration, sync::{Mutex, Arc}};
 
 use crossterm::{execute, terminal::EnterAlternateScreen};
 use tui::{Terminal, backend::{CrosstermBackend}, Frame, layout::Rect};
@@ -16,7 +16,7 @@ pub struct TerminalView<const FRAME_DELTA_TIME: u64>{
     update: Box<TerminalUpdate>,
     focus: bool,
 
-    t: Option<JoinHandle<()>>
+    _t: Option<JoinHandle<()>>
 }
 
 impl<const FRAME_DELTA_TIME: u64> View<InputQueue, Box<TerminalUpdate>> for TerminalView<FRAME_DELTA_TIME> {
@@ -25,6 +25,7 @@ impl<const FRAME_DELTA_TIME: u64> View<InputQueue, Box<TerminalUpdate>> for Term
     }
 
     fn update(&mut self, data: Box<TerminalUpdate>) {
+        let _ = self.backend.clear();
         self.update = data;
     }
 }
@@ -37,7 +38,7 @@ impl<const FRAME_DELTA_TIME: u64> TerminalView<FRAME_DELTA_TIME>{
 
         let backend = CrosstermBackend::new(stdout);
 
-        let mut terminal = match Terminal::new(backend){
+        let terminal = match Terminal::new(backend){
             Ok(val) => val,
             Err(err) => panic!("{}", err)
         };
@@ -49,7 +50,7 @@ impl<const FRAME_DELTA_TIME: u64> TerminalView<FRAME_DELTA_TIME>{
             update,
             focus: true,
 
-            t: None
+            _t: None
         }
     }
 
@@ -59,7 +60,7 @@ impl<const FRAME_DELTA_TIME: u64> TerminalView<FRAME_DELTA_TIME>{
         }
 
         if let Ok(size) = self.input_handler.new_size.try_recv() {
-            self.backend.resize(Rect{
+            let _ = self.backend.resize(Rect{
                 x: 0,
                 y: 0,
                 width: size.0,
@@ -69,7 +70,7 @@ impl<const FRAME_DELTA_TIME: u64> TerminalView<FRAME_DELTA_TIME>{
 
         if self.focus {
             //self.backend.clear();
-            self.backend.draw(|f| {
+            let _ = self.backend.draw(|f| {
                 (*self.update)(f);
             });
         }

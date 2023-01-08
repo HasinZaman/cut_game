@@ -8,7 +8,7 @@ use cyclic_list::{CyclicList, list::List};
 pub type InputQueue = CyclicList<10, Option<KeyEvent>, false>;
 
 pub struct InputHandler{
-    thread: JoinHandle<()>,
+    _thread: JoinHandle<()>,
 
     pub view_queue: Arc<Mutex<InputQueue>>,
     pub focus: Receiver<bool>,
@@ -25,7 +25,7 @@ impl InputHandler {
         ) = input_handler();
 
         Self{
-            thread,
+            _thread: thread,
 
             view_queue,
             focus,
@@ -62,22 +62,20 @@ fn input_handler() -> (JoinHandle<()>, Arc<Mutex<InputQueue>>, Receiver<bool>, R
             match event {
                 //presenter related event
                 event::Event::FocusGained => {
-                    focus_tx.send(true);
+                    let _ = focus_tx.send(true);
                 },
                 event::Event::FocusLost => {
-                    focus_tx.send(false);
+                    let _ = focus_tx.send(false);
                 },
 
                 //view related event
                 event::Event::Resize(col, row) => {
-                    new_size_tx.send((col, row));
+                    let _ = new_size_tx.send((col, row));
                 },
 
                 //model 
                 event::Event::Key(key) => key_event(key, &mut *t_input_stream.lock().unwrap()),
-                event::Event::Mouse(mouse) => todo!(),
-
-                event::Event::Paste(_) => {}
+                event::Event::Mouse(_) | event::Event::Paste(_) => {}
                 
             }
         }
@@ -88,5 +86,5 @@ fn input_handler() -> (JoinHandle<()>, Arc<Mutex<InputQueue>>, Receiver<bool>, R
 
 
 fn key_event(key: KeyEvent, io_stream: &mut InputQueue) {
-    io_stream.push(Some(key));
+    let _ = io_stream.push(Some(key));
 }

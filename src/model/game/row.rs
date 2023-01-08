@@ -21,9 +21,9 @@ impl<const WIDTH: usize> Row<WIDTH> {
         }
     }
     
-    pub fn swap(row_1: &mut Row<WIDTH>, row_2: &mut Row<WIDTH>) {
-        mem::swap(row_1, row_2);
-    }
+    // pub fn swap(row_1: &mut Row<WIDTH>, row_2: &mut Row<WIDTH>) {
+    //     mem::swap(row_1, row_2);
+    // }
 }
 
 impl<const WIDTH: usize> Debug for Row<WIDTH> {

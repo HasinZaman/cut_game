@@ -1,11 +1,11 @@
 use logger::log_initialize;
 
-use model::{game, ui::menu::{Menu, MainMenuOption}};
-use presenter::Presenter;
+use model::{cut_and_paste::SceneModel};
+use presenter::{Presenter, cut_and_paste::ScenePresenter};
 
-use crate::presenter::menu::MainMenu;
 
-use view::{terminal::{TerminalView}, View};
+
+use view::{terminal::{TerminalView}};
 
 mod logger;
 
@@ -18,16 +18,15 @@ fn main() {
     log_initialize();    
 
 
-    let mut model = Menu::<MainMenuOption>::new(String::from("Game Title"), MainMenuOption::default());
-    let mut presenter = MainMenu::new();
+    let mut model = SceneModel::default();
+    let mut presenter = ScenePresenter::default();//MainMenu::new();
     let mut terminal = TerminalView::<16>::new(Box::new(|_| {}));
 
-    presenter.update_model(&mut model, &mut terminal);
-    presenter.update_view(&mut model, &mut terminal);
-    terminal.render();
     loop {
         presenter.update_model(&mut model, &mut terminal);
-        presenter.update_view(&mut model, &mut terminal);
+        
+        presenter.update_view(&mut model, &mut terminal, None);
+        
         terminal.render();
     }
 
