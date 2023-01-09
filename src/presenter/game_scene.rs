@@ -3,7 +3,7 @@ use std::{io::Stdout, cmp::{min, max}};
 use crossterm::event::{KeyEvent, KeyCode, KeyModifiers, KeyEventKind, KeyEventState};
 use cyclic_list::List;
 
-use tui::{Frame, backend::CrosstermBackend, layout::{Layout, Direction, Constraint, Rect}, text::{Span, Spans}, style::{Style, Color}, widgets::{Paragraph, Gauge, Block, Borders}};
+use tui::{Frame, backend::CrosstermBackend, layout::{Layout, Direction, Constraint, Rect, Alignment}, text::{Span, Spans}, style::{Style, Color}, widgets::{Paragraph, Gauge, Block, Borders}};
 
 use crate::{model::{game::{game_model::{GameModel, GameCommand}, Board, cell::{Cell, CellValue}}, Model}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
 
@@ -60,6 +60,26 @@ impl<const D: u64> Presenter<GameModel, TerminalView<D>, KeyEvent, InputQueue, B
 fn render_fn<const WIDTH: usize, const HEIGHT: usize>(board: Board<WIDTH, HEIGHT>, cursor_range: ((i8, i8), (i8, i8)), end_state: u64) -> Box<dyn Fn(&mut Frame<CrosstermBackend<Stdout>>)> {
     let render_fn: Box<TerminalUpdate> = Box::new(
         move |f| {
+            {
+                let size = f.size();
+
+                if size.width < WIDTH as u16 || size.height < HEIGHT as u16 {
+
+                    f.render_widget(
+                        Paragraph::new(
+                            Spans::from(
+                                vec![
+                                    Span::from("Game Screen is too small. Resize window to fit game screen.")
+                                ]
+                            )
+                        )
+                        .alignment(Alignment::Center),
+                        f.size()
+                    );
+                    return;
+                }
+            }
+
             let white_space = (f.size().height - HEIGHT as u16)/ 2;
 
             let mut board_rect = Layout::default()
