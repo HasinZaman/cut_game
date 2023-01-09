@@ -1,4 +1,4 @@
-use std::{io::Stdout, cmp::{min, max}};
+use std::{io::Stdout, cmp::{min, max}, backtrace::{self, Backtrace}};
 
 use crossterm::event::{KeyEvent, KeyCode, KeyModifiers, KeyEventKind, KeyEventState};
 use cyclic_list::List;
@@ -18,8 +18,8 @@ impl GameScene {
     }
 }
 
-impl<const D: u64, const T: u64> Presenter<GameModel<T>, TerminalView<D>, KeyEvent, InputQueue, Box<TerminalUpdate>, Option<GameCommand>>  for GameScene {
-    fn update_model(&self, model: &mut GameModel<T>, view: &mut TerminalView<D>) {
+impl<const D: u64> Presenter<GameModel, TerminalView<D>, KeyEvent, InputQueue, Box<TerminalUpdate>, Option<GameCommand>>  for GameScene {
+    fn update_model(&self, model: &mut GameModel, view: &mut TerminalView<D>) {
         let events = view.send_event();
         let events = &mut *events.lock().unwrap();
 
@@ -30,11 +30,10 @@ impl<const D: u64, const T: u64> Presenter<GameModel<T>, TerminalView<D>, KeyEve
         model.update_self(KeyEvent { code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: KeyEventKind::Press, state: KeyEventState::NONE });
     }
 
-    fn update_view(&mut self, model: &mut GameModel<T>, view: &mut TerminalView<D>, cmd_carry_over: Option<Option<GameCommand>>) {
+    fn update_view(&mut self, model: &mut GameModel, view: &mut TerminalView<D>, cmd_carry_over: Option<Option<GameCommand>>) {
         let command = match (model.update_presenter(), cmd_carry_over) {
-            (None, None) => None,
-            (None, Some(val)) => val,
-            (Some(val), None) | (Some(val), Some(_)) => Some(val),
+            (Some(_), None) | (None, None) => None,
+            (Some(_), Some(val)) | (None, Some(val)) => val,
         };
 
         if let None = command {
@@ -123,8 +122,6 @@ fn render_fn<const WIDTH: usize, const HEIGHT: usize>(board: Board<WIDTH, HEIGHT
                     lines.push(Spans::from(spans));
                 }
 
-                //trace!("{:#?}", lines);
-                //trace!("{:#?}", board);
                 f.render_widget(
                     Paragraph::new(lines)
                         .block(Block::default().borders(Borders::all())),

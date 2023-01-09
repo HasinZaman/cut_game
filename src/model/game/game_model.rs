@@ -4,6 +4,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use cyclic_list::{CyclicList, List};
 use log::trace;
 
+
 use crate::model::Model;
 
 use super::{Game, score::Score, CursorCommand, Board, CursorMove, CursorRot, CursorLen, cursor::Coord, cell::Cell};
@@ -13,7 +14,7 @@ const HEIGHT : usize = 34;
 
 pub type GameState = (Board<WIDTH, HEIGHT>, (Coord, Coord), u64);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum GameCommand{
     BoardState(GameState),
     GameOver(Score)
@@ -21,32 +22,19 @@ pub enum GameCommand{
 
 type UserCommandQueue = CyclicList<20, CursorCommand, false>;
 
-pub struct GameModel<const GAME_TICK_RATE: u64>{
-    _thread: JoinHandle<()>,
+pub struct GameModel{
     game: Game::<WIDTH, HEIGHT>,
-    update_cond: Receiver<()>,
     total_ticks: u128,
     update: bool,
 }
 
-impl<const GAME_TICK_RATE: u64> GameModel<GAME_TICK_RATE> {
+impl GameModel {
     pub fn new(max_tick: u64) -> Self {
         let mut game = Game::<WIDTH, HEIGHT>::default();
-        let (tx, rx) = mpsc::channel();
 
-        let update_cond = rx;
-
-        let _thread = thread::spawn(move || {
-            loop {
-                tx.send(());
-                thread::sleep(Duration::from_millis(250));
-            }
-        });
 
         return Self{
-            _thread,
             game,
-            update_cond,
             total_ticks: 0,
             update: true
         }
@@ -54,7 +42,7 @@ impl<const GAME_TICK_RATE: u64> GameModel<GAME_TICK_RATE> {
 }
 
 
-impl<const T: u64> Model<KeyEvent, Option<GameCommand>> for GameModel<T> {
+impl Model<KeyEvent, Option<GameCommand>> for GameModel {
     fn update_self(&mut self, event: KeyEvent) {
 
         self.update = true;
@@ -97,15 +85,7 @@ impl<const T: u64> Model<KeyEvent, Option<GameCommand>> for GameModel<T> {
     }
 
     fn update_presenter(&mut self) -> Option<GameCommand> {
-        if self.update {
-            self.update = false;
-            return Some(GameCommand::BoardState((
-                self.game.board,
-                self.game.cursor_range(),
-                0
-            )));
-        }
-
+        
         let end_game = self.game.board
             .iter()
             .all(
@@ -124,9 +104,15 @@ impl<const T: u64> Model<KeyEvent, Option<GameCommand>> for GameModel<T> {
             return Some(GameCommand::GameOver(self.game.clone().into()))
         }
 
-        if self._thread.is_finished() {
-            trace!("It's over?");
+        if self.update {
+            self.update = false;
+            return Some(GameCommand::BoardState((
+                self.game.board,
+                self.game.cursor_range(),
+                0
+            )));
         }
+
         None
     }
 }

@@ -3,7 +3,7 @@ use std::io::Stdout;
 use crossterm::event::KeyEvent;
 use cyclic_list::{List, CyclicList};
 use log::trace;
-use tui::{layout::{Direction, Constraint, Layout, Alignment}, widgets::{Paragraph, Block, Borders}, text::{Spans, Span}, style::{Style, Color}, Frame, backend::CrosstermBackend};
+use tui::{layout::{Direction, Constraint, Layout, Alignment}, widgets::{Paragraph}, text::{Spans, Span}, style::{Style, Color}, Frame, backend::CrosstermBackend};
 
 use crate::{model::{Model, ui::{menu::{MainMenuOption, MenuCommand}}}, view::{View, terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue}};
 

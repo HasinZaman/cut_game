@@ -4,9 +4,9 @@ use super::Game;
 
 #[derive(Clone, Copy)]
 pub struct Score {
-    cols: u64,
+    pub cols: u64,
     pub col_modifier: u64,
-    rows: u64,
+    pub rows: u64,
     pub row_modifier: u64,
 }
 

@@ -13,7 +13,8 @@ use super::{ui::{menu::{Menu, MainMenuOption, MenuCommand}, cut_scene::{CutScene
 pub enum SceneModel{
     MainMenu(Menu<MainMenuOption>),
     CutScene(CutSceneModel<100>),
-    GameScene(GameModel<2500>),
+    GameScene(GameModel),
+    GameOverScene(CutSceneModel<100>),
 }
 
 impl TryFrom<u32> for SceneModel {
@@ -41,6 +42,15 @@ impl TryFrom<u32> for SceneModel {
                     GameModel::new(1000)
                 )
             ),
+            3 => Ok(SceneModel::CutScene(CutSceneModel::new(
+                vec![
+                    String::from("Your Score was "),
+                    String::from("use 'W', 'A', 'S', 'D' to move"),
+                    String::from("use 'Q' & 'E' to expand and shrink the cursor"),
+                    String::from("use 'q' & 'e' to rotate the cursor"),
+                    String::from("use 'X' & 'V' to cut and paste"),
+                    ]
+                ))),
             _ => Err(())
         }
     }
@@ -63,9 +73,8 @@ impl Model<KeyEvent, Option<PresenterCommand>> for SceneModel {
         match self {
             SceneModel::MainMenu(main_menu) => main_menu.update_self(event),
             SceneModel::CutScene(cut_scene) => cut_scene.update_self(event),
-            SceneModel::GameScene(game_scene) => {
-                game_scene.update_self(event)
-            },
+            SceneModel::GameScene(game_scene) => game_scene.update_self(event),
+            SceneModel::GameOverScene(game_over_scene) => game_over_scene.update_self(event),
         }
     }
 
@@ -100,7 +109,7 @@ impl Model<KeyEvent, Option<PresenterCommand>> for SceneModel {
                     return Some(PresenterCommand::MainMenu(menu_commands));
                 }
             },
-            SceneModel::CutScene(cut_scene) => {
+            SceneModel::GameOverScene(cut_scene) | SceneModel::CutScene(cut_scene) => {
                 let command = cut_scene.update_presenter();
 
                 if let None = command {
@@ -120,7 +129,6 @@ impl Model<KeyEvent, Option<PresenterCommand>> for SceneModel {
                         )
                     },
                     CutSceneState::Completed => {
-                        trace!("Change scene");
                         return Some(PresenterCommand::Change(2));
                     },
                 }

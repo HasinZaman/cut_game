@@ -2,7 +2,6 @@ use std::{array, fmt::{Debug, Display}, cmp::{min, max}};
 
 
 use cyclic_list::{CyclicList, List};
-use log::trace;
 
 use self::{row::Row, cell::Cell, cursor::{Cursor, Coord}};
 

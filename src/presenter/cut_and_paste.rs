@@ -3,7 +3,7 @@ use cyclic_list::{CyclicList, List};
 use log::trace;
 
 
-use crate::{model::{cut_and_paste::SceneModel, Model, ui::cut_scene::CutSceneState, game::game_model::GameCommand}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
+use crate::{model::{cut_and_paste::SceneModel, Model, ui::cut_scene::{CutSceneState, CutSceneModel}, game::game_model::GameCommand}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
 
 use super::{menu::{MainMenu, MenuCommandQueue}, cut_scene::CutScene, Presenter, game_scene::GameScene};
 
@@ -11,6 +11,7 @@ pub enum ScenePresenter{
     MainMenu(MainMenu),
     CutScene(CutScene),
     Game(GameScene),
+    GameOver(CutScene)
 }
 
 impl Default for ScenePresenter{
@@ -27,6 +28,7 @@ impl TryFrom<u32> for ScenePresenter {
             0 => Ok(ScenePresenter::MainMenu(MainMenu::new())),
             1 => Ok(ScenePresenter::CutScene(CutScene::new())),
             2 => Ok(ScenePresenter::Game(GameScene::new())),
+            3 => Ok(ScenePresenter::CutScene(CutScene::new())),
             _ => Err(())
         }
     }
@@ -76,14 +78,40 @@ impl<const T: u64> Presenter<SceneModel, TerminalView<T>, KeyEvent, InputQueue, 
                     }
                 },
                 PresenterCommand::CutScene(cut_scene) => {
-                    if let (ScenePresenter::CutScene(presenter), SceneModel::CutScene(model)) = (self, model) {
-                        presenter.update_view(model, view, Some(Some(cut_scene)));
+                    match (self, model) {
+                        (ScenePresenter::CutScene(presenter), SceneModel::CutScene(model)) => presenter.update_view(model, view, Some(Some(cut_scene))),
+                        (ScenePresenter::CutScene(presenter), SceneModel::GameOverScene(model)) => presenter.update_view(model, view, Some(Some(cut_scene))),
+                        (ScenePresenter::GameOver(presenter), SceneModel::CutScene(model)) => presenter.update_view(model, view, Some(Some(cut_scene))),
+                        (ScenePresenter::GameOver(presenter), SceneModel::GameOverScene(model)) => presenter.update_view(model, view, Some(Some(cut_scene))),
+                        _ => {}
                     }
                 },
                 PresenterCommand::GameScene(game) => {
-                    if let (ScenePresenter::Game(presenter), SceneModel::GameScene(model)) = (self, model) {
-                        presenter.update_view(model, view, Some(game));
-                    }
+                    match game {
+                        Some(GameCommand::GameOver(score)) => {
+                            trace!("GAME OVER change scene");
+                            *self = Self::try_from(1).unwrap();
+                            *model = SceneModel::GameOverScene(
+                                CutSceneModel::new(
+                                    vec![
+                                        format!("Completed rows: {}", score.rows),
+                                        format!("Completed Columns: {}", score.cols),
+                                        format!("Score: {}", score.score()),
+                                    ]
+                                )
+                            );
+
+                            return ;
+                        },
+                        Some(GameCommand::BoardState(board)) => {
+                            if let (ScenePresenter::Game(game_presenter), SceneModel::GameScene(game_model)) = (self, model) {
+                                game_presenter.update_view(game_model, view, Some(game))
+                            }
+                        },
+                        None => {
+                        },
+                    };
+                    
                 },
             }
         }
