@@ -28,6 +28,7 @@ impl Distribution<CellValue> for Standard {
 pub enum Cell {
     Empty,
     Filled(CellValue),
+    Random
 }
 
 impl Default for Cell {
@@ -41,6 +42,7 @@ impl Debug for Cell {
         match self {
             Self::Empty => write!(f, "E"),
             Self::Filled(val) => write!(f, "{}", *val as u8),
+            Cell::Random => write!(f, "R"),
         }
     }
 }
@@ -53,6 +55,7 @@ impl Display for Cell {
             match self {
                 Cell::Empty => String::from(" "),
                 Cell::Filled(val) => format!("{}", *val as u8),
+                Cell::Random => String::from("R"),
             }
         )
         
@@ -64,6 +67,7 @@ impl PartialEq for Cell {
         match (self, other) {
             (Self::Empty, Self::Empty) => false,
             (Self::Filled(l0), Self::Filled(r0)) => l0 == r0,
+            (Self::Random, Self::Filled(_)) | (Self::Filled(_), Self::Random) => true,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
@@ -71,8 +75,10 @@ impl PartialEq for Cell {
 
 impl Distribution<Cell> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Cell {
-        match rng.gen_range(0usize..=1usize) {
-            0..=1 => Cell::Filled(rand::random()),
+        match rng.gen_range(0usize..=10usize) {
+            0..=2 => Cell::Empty,
+            3..=7 => Cell::Filled(rand::random()),
+            8..=10 => Cell::Random,
             _ => panic!()
         }
     }

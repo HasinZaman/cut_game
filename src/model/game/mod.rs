@@ -77,7 +77,10 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
                 find(
                     |y| {
                         match (&self.board[*y - 1][x], &self.board[*y][x]) {
+                            (cell::Cell::Empty, cell::Cell::Random) |
                             (cell::Cell::Empty, cell::Cell::Filled(_)) |
+                            
+                            (cell::Cell::Random, cell::Cell::Empty) |
                             (cell::Cell::Filled(_), cell::Cell::Empty) => true,
 
                             _=> false
@@ -89,13 +92,19 @@ impl<const WIDTH: usize, const HEIGHT: usize> Game<WIDTH, HEIGHT> {
             'row_loop: for y in start..HEIGHT{
                 match (&self.board[y - 1][x], &self.board[y][x]) {
                     //next row
+                    (cell::Cell::Random, cell::Cell::Empty) |
                     (cell::Cell::Filled(_), cell::Cell::Empty) |
                     (cell::Cell::Empty, cell::Cell::Empty) => {
                         continue 'row_loop;
                     }
 
                     //falling logic
+                    (cell::Cell::Random, cell::Cell::Random) |
+                    (cell::Cell::Filled(_), cell::Cell::Random) |
+                    (cell::Cell::Random, cell::Cell::Filled(_)) |
                     (cell::Cell::Filled(_), cell::Cell::Filled(_)) |
+                    
+                    (cell::Cell::Empty, cell::Cell::Random) |
                     (cell::Cell::Empty, cell::Cell::Filled(_)) => {
                         self.board[y - 1][x] = self.board[y][x];
 

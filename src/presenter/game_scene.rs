@@ -1,11 +1,11 @@
-use std::{io::Stdout, cmp::{min, max}, backtrace::{self, Backtrace}};
+use std::{io::Stdout, cmp::{min, max}};
 
 use crossterm::event::{KeyEvent, KeyCode, KeyModifiers, KeyEventKind, KeyEventState};
 use cyclic_list::List;
-use log::trace;
+
 use tui::{Frame, backend::CrosstermBackend, layout::{Layout, Direction, Constraint, Rect}, text::{Span, Spans}, style::{Style, Color}, widgets::{Paragraph, Gauge, Block, Borders}};
 
-use crate::{model::{game::{game_model::{GameModel, GameCommand}, Board, cell::Cell}, Model}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
+use crate::{model::{game::{game_model::{GameModel, GameCommand}, Board, cell::{Cell, CellValue}}, Model}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
 
 use super::Presenter;
 
@@ -98,7 +98,10 @@ fn render_fn<const WIDTH: usize, const HEIGHT: usize>(board: Board<WIDTH, HEIGHT
                         let x_cond = x_range.0 <= col as i8 && col as i8 <= x_range.1;
                         let y_cond = y_range.0 <= row as i8 && row as i8 <= y_range.1;
 
-                        let cell = board[row][col].to_string();
+                        let cell = match board[row][col] {
+                            Cell::Empty | Cell::Filled(_) => board[row][col].to_string(),
+                            Cell::Random => format!("{}", rand::random::<CellValue>() as u8),
+                        };
                         match (x_cond, y_cond) {
                             (true, true) => {
                                 
