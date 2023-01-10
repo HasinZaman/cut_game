@@ -1,13 +1,4 @@
-```
- ____             __           ____        ____                  __             
-/\  _`\          /\ \__      /|  _ \      /\  _`\               /\ \__          
-\ \ \/\_\  __  __\ \ ,_\     |/\   |      \ \ \L\ \ __      ____\ \ ,_\    __   
- \ \ \/_/_/\ \/\ \\ \ \/      \// __`\/\   \ \ ,__/'__`\   /',__\\ \ \/  /'__`\ 
-  \ \ \L\ \ \ \_\ \\ \ \_     /|  \L>  <_   \ \ \/\ \L\.\_/\__, `\\ \ \_/\  __/ 
-   \ \____/\ \____/ \ \__\    | \_____/\/    \ \_\ \__/.\_\/\____/ \ \__\ \____\
-    \/___/  \/___/   \/__/     \/____/\/      \/_/\/__/\/_/\/___/   \/__/\/____/
-                                                                                 
-```
+![Title](http://hasinzaman.link/src/media/img/dev_logs/CutGame/mainMenu.gif)
 
 # Summary
 
@@ -15,18 +6,27 @@ Cut and Paste is a game developed in a week for the [2022 uOttawa Game Dev Club 
 
 The objective was to create a game using [`TUI-rs`](https://docs.rs/tui/latest/tui/) and `Rust` to embody the theme cut in the style of an arcade game.
 
+![Gameplay 1](http://hasinzaman.link/src/media/img/dev_logs/CutGame/gameplay_1.gif)
+![Gameplay 2](http://hasinzaman.link/src/media/img/dev_logs/CutGame/gameplay_2.gif)
+![Gameplay 3](http://hasinzaman.link/src/media/img/dev_logs/CutGame/gameplay_3.gif)
+
 # Gameplay
 
 The objective of the game is to maximize points before the play area is filled with elements.
 
+![Objective](http://hasinzaman.link/src/media/img/dev_logs/CutGame/objective.gif)
 Points are obtained though filling a row or column with exactly one's or zeros.
 
+![How to Move](http://hasinzaman.link/src/media/img/dev_logs/CutGame/move.gif)
 Use `wasd` or `WASD` keys to move the cursor.
 
+![How to Expand](http://hasinzaman.link/src/media/img/dev_logs/CutGame/expand.gif)
 Use `Q` and `E` to double the cursor size or to halve the cursor size
 
+![How to Rotate](http://hasinzaman.link/src/media/img/dev_logs/CutGame/rotate.gif)
 Use `q` and `e` to rotate the cursor
 
+![How to Cut and Paste](http://hasinzaman.link/src/media/img/dev_logs/CutGame/cutAndPaste.gif)
 Use `X` and `V` to cut and paste values around the play area
 
 # Installation
