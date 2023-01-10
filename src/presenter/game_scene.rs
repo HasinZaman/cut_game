@@ -3,7 +3,7 @@ use std::{io::Stdout, cmp::{min, max}};
 use crossterm::event::{KeyEvent, KeyCode, KeyModifiers, KeyEventKind, KeyEventState};
 use cyclic_list::List;
 
-use tui::{Frame, backend::CrosstermBackend, layout::{Layout, Direction, Constraint, Rect, Alignment}, text::{Span, Spans}, style::{Style, Color}, widgets::{Paragraph, Gauge, Block, Borders}};
+use tui::{Frame, backend::CrosstermBackend, layout::{Layout, Direction, Constraint, Rect, Alignment}, text::{Span, Spans}, style::{Style, Color}, widgets::{Paragraph, Gauge, Block, Borders, Clear}};
 
 use crate::{model::{game::{game_model::{GameModel, GameCommand}, Board, cell::{Cell, CellValue}}, Model}, view::{terminal::{TerminalView, TerminalUpdate}, io::input_handler::InputQueue, View}};
 
@@ -144,6 +144,8 @@ fn render_fn<const WIDTH: usize, const HEIGHT: usize>(board: Board<WIDTH, HEIGHT
 
                     lines.push(Spans::from(spans));
                 }
+
+                f.render_widget( Clear, board_rect);
 
                 f.render_widget(
                     Paragraph::new(lines)

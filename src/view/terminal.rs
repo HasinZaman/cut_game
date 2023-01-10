@@ -38,10 +38,12 @@ impl<const FRAME_DELTA_TIME: u64> TerminalView<FRAME_DELTA_TIME>{
 
         let backend = CrosstermBackend::new(stdout);
 
-        let terminal = match Terminal::new(backend){
+        let mut terminal = match Terminal::new(backend){
             Ok(val) => val,
             Err(err) => panic!("{}", err)
         };
+
+        let _ = terminal.hide_cursor();
 
         Self {
             input_handler: InputHandler::new(),
